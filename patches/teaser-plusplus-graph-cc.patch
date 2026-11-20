@@ -1,0 +1,13 @@
+diff --git a/teaser/src/graph.cc b/teaser/src/graph.cc
+index e1c2ea7..4d4d8b6 100644
+--- a/teaser/src/graph.cc
++++ b/teaser/src/graph.cc
+@@ -7,6 +7,8 @@
+  */
+ 
+ #include "teaser/graph.h"
++#include <vector>
++using namespace std;
+ #include "pmc/pmc.h"
+ 
+ vector<int> teaser::MaxCliqueSolver::findMaxClique(teaser::Graph graph) {

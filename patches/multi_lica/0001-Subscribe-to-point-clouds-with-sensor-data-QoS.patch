@@ -1,0 +1,37 @@
+From 326b91777e06f8e9fb5a785b6d155fb98ff26838 Mon Sep 17 00:00:00 2001
+From: Pavan Patil <pavan.patil@gahanai.com>
+Date: Fri, 20 Nov 2026 17:24:03 +0530
+Subject: [PATCH 1/4] Subscribe to point clouds with sensor-data QoS
+
+Ouster (and most lidar drivers) publish best-effort. The default reliable
+subscription is QoS-incompatible, so no clouds were ever received.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ multi_lidar_calibrator/multi_lidar_calibrator.py | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/multi_lidar_calibrator/multi_lidar_calibrator.py b/multi_lidar_calibrator/multi_lidar_calibrator.py
+index 5472d59..e697c7f 100644
+--- a/multi_lidar_calibrator/multi_lidar_calibrator.py
++++ b/multi_lidar_calibrator/multi_lidar_calibrator.py
+@@ -5,6 +5,7 @@ from time import time
+ import numpy as np
+ import open3d as o3d
+ import rclpy
++from rclpy.qos import qos_profile_sensor_data
+ import ros2_numpy as rnp
+ from geometry_msgs.msg import Transform
+ from rclpy.node import Node
+@@ -95,7 +96,7 @@ class MultiLidarCalibrator(Node):
+         self.tf_msg: TFMessage = None
+         for topic in self.topic_names:
+             self.subscribers.append(
+-                self.create_subscription(PointCloud2, topic, self.pointcloud_callback, 10)
++                self.create_subscription(PointCloud2, topic, self.pointcloud_callback, qos_profile_sensor_data)
+             )
+         self.tf_subscriber = self.create_subscription(
+             TFMessage, self.tf_topic, self.tf_callback, 10
+-- 
+2.34.1
+
