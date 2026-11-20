@@ -1,0 +1,10 @@
+# build output
+build/
+install/
+log/
+# recorded bags (GBs) and driver-written sensor metadata
+rosbag2_*/
+*_metadata.json
+# source repos: each has its own history; see repos.yaml
+src/
+__pycache__/
