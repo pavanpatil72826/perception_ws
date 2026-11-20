@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Fast DDS: shared-memory-only transport with a large segment, for big PointCloud2 messages on one machine.
+     Use: export FASTRTPS_DEFAULT_PROFILES_FILE=<this file> in every terminal (publisher, polka, rviz). -->
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+  <transport_descriptors>
+    <transport_descriptor>
+      <transport_id>shm_big</transport_id>
+      <type>SHM</type>
+      <segment_size>268435456</segment_size>
+    </transport_descriptor>
+  </transport_descriptors>
+  <participant profile_name="shm_participant" is_default_profile="true">
+    <rtps>
+      <userTransports>
+        <transport_id>shm_big</transport_id>
+      </userTransports>
+      <useBuiltinTransports>false</useBuiltinTransports>
+    </rtps>
+  </participant>
+</profiles>
