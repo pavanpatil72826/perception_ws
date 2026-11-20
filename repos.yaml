@@ -1,0 +1,17 @@
+# Source repos used in this workspace (vcstool format: vcs import src < repos.yaml).
+# Pin = revision this workspace was developed against.
+repositories:
+  ouster-ros:
+    type: git
+    url: git@github.com:pavanpatil72826/ouster-ros.git   # fork; has the dual-lidar launch + calibrated transform
+    version: feature/dual_lidar_launch_ros2             # tip f5a502c
+    # needs submodule: cd src/ouster-ros && git submodule update --init --recursive
+  Multi_LiCa:
+    type: git
+    url: https://github.com/TUMFTM/Multi_LiCa.git       # upstream; our changes are in patches/multi_lica/
+    version: 5e6de27
+    # needs submodule: git submodule update --init (TEASER-plusplus), plus patches/teaser-plusplus-graph-cc.patch
+  polka:
+    type: git
+    url: https://github.com/Pana1v/polka.git
+    version: 5c30ae3                                   # humble branch, v0.6.1

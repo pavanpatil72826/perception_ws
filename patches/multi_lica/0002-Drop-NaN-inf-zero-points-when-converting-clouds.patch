@@ -1,0 +1,43 @@
+From 85aca2dc7418419c29b44b08d686ff6aff8889e3 Mon Sep 17 00:00:00 2001
+From: Pavan Patil <pavan.patil@gahanai.com>
+Date: Fri, 20 Nov 2026 17:24:03 +0530
+Subject: [PATCH 2/4] Drop NaN/inf/zero points when converting clouds
+
+Ouster publishes NaN for beams without a return (~20% of an OS-1-32 scan).
+Open3D voxel/GICP/FPFH silently fail on NaNs (fitness 0), so every
+calibration was reported as unsuccessful.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ multi_lidar_calibrator/multi_lidar_calibrator.py | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/multi_lidar_calibrator/multi_lidar_calibrator.py b/multi_lidar_calibrator/multi_lidar_calibrator.py
+index e697c7f..155537e 100644
+--- a/multi_lidar_calibrator/multi_lidar_calibrator.py
++++ b/multi_lidar_calibrator/multi_lidar_calibrator.py
+@@ -181,11 +181,17 @@ class MultiLidarCalibrator(Node):
+             )
+         for key in self.lidar_data.keys():
+             # convert data from ros to pcd needed for open3d
+-            t = rnp.numpify(self.lidar_data[key][0])
+-            pcd = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(t["xyz"]))
++            # drop invalid returns (NaN / inf / exact zero): Ouster publishes NaN for beams
++            # without a return and Open3D registration silently fails when NaNs are present
++            def _valid_xyz(msg):
++                xyz = rnp.numpify(msg)["xyz"].reshape(-1, 3)
++                return xyz[np.isfinite(xyz).all(axis=1) & (np.abs(xyz).sum(axis=1) > 0)]
++
++            pcd = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(_valid_xyz(self.lidar_data[key][0])))
+             for i in range(1, self.frame_count):
+-                t = rnp.numpify(self.lidar_data[key][i])
+-                pcd += o3d.geometry.PointCloud(o3d.utility.Vector3dVector(t["xyz"]))
++                pcd += o3d.geometry.PointCloud(
++                    o3d.utility.Vector3dVector(_valid_xyz(self.lidar_data[key][i]))
++                )
+             self.lidar_dict[key].load_pcd(pcd)
+         self.get_logger().info("Converted all the needed ros-data")
+ 
+-- 
+2.34.1
+

@@ -1,0 +1,63 @@
+From 5acc60669c31f63f9cf95969b4670d33ffce4a8e Mon Sep 17 00:00:00 2001
+From: Pavan Patil <pavan.patil@gahanai.com>
+Date: Fri, 20 Nov 2026 17:24:03 +0530
+Subject: [PATCH 3/4] Add coarse_method parameter (TEASER default, FPFH,
+ RANSAC, NONE)
+
+Previously hard-coded to TEASER. NONE starts GICP from the supplied initial
+guess without a coarse feature-based alignment.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ multi_lidar_calibrator/calibration/Calibration.py | 8 +++++++-
+ multi_lidar_calibrator/multi_lidar_calibrator.py  | 1 +
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/multi_lidar_calibrator/calibration/Calibration.py b/multi_lidar_calibrator/calibration/Calibration.py
+index db7492b..65a284a 100644
+--- a/multi_lidar_calibrator/calibration/Calibration.py
++++ b/multi_lidar_calibrator/calibration/Calibration.py
+@@ -92,6 +92,8 @@ class Calibration:
+     Handles initial and GICP calibration between source and target lidars.
+     """
+ 
++    COARSE_METHOD = 'TEASER'
++
+     def __init__(
+         self,
+         source: Lidar,
+@@ -159,7 +161,7 @@ class Calibration:
+         source_pcd = o3d.geometry.PointCloud(self.source.pcd.transform(transformation_matrix))
+         target_pcd = o3d.geometry.PointCloud(self.target.pcd)
+ 
+-        method = 'TEASER'
++        method = Calibration.COARSE_METHOD  # 'TEASER' (default), 'FPFH', 'RANSAC' or 'NONE'
+         if method == 'FPFH':
+             fpfh_voxel_size = 0.5
+             source_fpfh = self.preprocess_point_cloud(source_pcd, fpfh_voxel_size)
+@@ -182,6 +184,10 @@ class Calibration:
+             median_trans = self.median_transformation(transformations)
+             self.initial_transformation = TransformationMatrix.from_matrix(median_trans)
+ 
++        elif method == 'NONE':
++            # trust the initial guess: source is already pre-aligned, start GICP from identity
++            self.initial_transformation = TransformationMatrix.from_matrix(np.eye(4))
++
+         elif method == 'TEASER':
+             voxel_size = 0.35
+             teaser_transformation = self.teaser_initial_registration(source_pcd, target_pcd, voxel_size)
+diff --git a/multi_lidar_calibrator/multi_lidar_calibrator.py b/multi_lidar_calibrator/multi_lidar_calibrator.py
+index 155537e..205fe26 100644
+--- a/multi_lidar_calibrator/multi_lidar_calibrator.py
++++ b/multi_lidar_calibrator/multi_lidar_calibrator.py
+@@ -45,6 +45,7 @@ class MultiLidarCalibrator(Node):
+         super().__init__("multi_subscriber_node")
+         self.tf_topic = self.declare_parameter("tf_topic", "/tf_static").value
+         self.visualize = self.declare_parameter("visualize", False).value
++        Calibration.COARSE_METHOD = self.declare_parameter("coarse_method", "TEASER").value
+         self.use_fitness_based_calibration = self.declare_parameter(
+             "use_fitness_based_calibration", False
+         ).value
+-- 
+2.34.1
+
