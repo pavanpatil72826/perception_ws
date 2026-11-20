@@ -1,0 +1,34 @@
+# POLKA config for the dual Ouster OS-1-32 setup (front + rear).
+# Merged cloud is published on /polka/merged_cloud in the imu_link frame.
+# TF needed: imu_link -> drwig_*_licam -> drwig_*_licam_lidar (dual_lidar.launch.py + driver).
+polka:
+  ros__parameters:
+    output_frame_id: "imu_link"
+    output_rate: 10.0
+    enable_gpu: false            # CPU-only build
+
+    outputs:
+      cloud:
+        enabled: true
+        topic: "~/merged_cloud"
+        qos:
+          reliability: "reliable"
+          durability: "volatile"
+          history_depth: 5
+      scan:
+        enabled: false
+
+    source_names: ["front", "rear"]
+    sources:
+      front:
+        topic: "/drwig_Front_licam/points"
+        type: "pointcloud2"
+        qos_reliability: "best_effort"   # Ouster publishes best-effort
+        qos_history_depth: 1
+        expected_rate: 10.0
+      rear:
+        topic: "/drwig_Rear_licam/points"
+        type: "pointcloud2"
+        qos_reliability: "best_effort"
+        qos_history_depth: 1
+        expected_rate: 10.0
